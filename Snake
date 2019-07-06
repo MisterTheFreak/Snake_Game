@@ -1,0 +1,229 @@
+import pygame
+import random
+
+pygame.init()
+
+win = pygame.display.set_mode((350, 350))
+pygame.display.set_caption("Snake")
+
+
+class Snake:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.vel = 4
+        self.facing_right = True
+        self.facing_left = False
+        self.facing_up = False
+        self.facing_down = False
+
+    def draw_head(self):
+        pygame.draw.rect(win, (255, 0, 0), (self.x, self.y, self.width, self.height))
+
+    def append_square(self):
+        if self.facing_right:
+            line_x_right.append(Line(self.x + 2.5, self.y + 2.5, 5, 5))
+        if self.facing_up:
+            line_y_up.append(Line(self.x + 2.5, self.y + 2.5, 5, 5))
+        if self.facing_left:
+            line_x_left.append(Line(self.x + 2.5, self.y + 2.5, 5, 5))
+        if self.facing_down:
+            line_y_down.append(Line(self.x + 2.5, self.y + 2.5, 5, 5))
+
+
+class Line:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.hit_box = (self.x, self.y, 5, 5)
+
+    def draw_line(self):
+        pygame.draw.rect(win, (255, 255, 255), (self.x, self.y, self.width, self.height))
+        # pygame.draw.rect(win, (0, 255, 0), self.hit_box, 2)
+
+
+class Border:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+    def draw_border(self):
+        pygame.draw.rect(win, (0, 0, 255), (self.x, self.y, 10, 10))
+
+
+class Fruit:
+    def __init__(self, x, y, radius):
+        self.x = x
+        self.y = y
+        self.radius = radius
+
+    def draw_fruit(self):
+        pygame.draw.circle(win, (0, 255, 0), (self.x, self.y), self.radius)
+
+
+snake = Snake(40, 40, 10, 10)
+border = Border()
+fruit = Fruit(random.randint(20, 330), random.randint(20, 330), 3)
+screen_width = 350
+screen_height = 350
+border_width = 10
+border_height = 10
+you_lose = False
+score = 0
+line_x_right = []
+line_x_left = []
+line_y_up = []
+line_y_down = []
+has_moved_right = True
+has_moved_left = False
+has_moved_up = False
+has_moved_down = False
+run = True
+
+
+def you_lost():
+    font_1 = pygame.font.SysFont("comicsans", 20)
+    text = font_1.render('''You lost! Press "r" to restart''', 1, (255, 255, 255))
+    win.blit(text, (175 - text.get_width() / 2, 60))
+
+
+def draw_score():
+    font = pygame.font.SysFont("comicsans", 20)
+    text_1 = font.render("Score: " + str(score), 1, (255, 255, 255))
+    win.blit(text_1, (280 - text_1.get_width() / 2, 30))
+
+
+def draw_window():
+    border.x = 0
+    border.y = 0
+    for object_1 in line_x_left:
+        object_1.draw_line()
+    for object_2 in line_x_right:
+        object_2.draw_line()
+    for object_3 in line_y_up:
+        object_3.draw_line()
+    for object_4 in line_y_down:
+        object_4.draw_line()
+    snake.draw_head()
+    for i in range(34):
+        border.draw_border()
+        border.x += 10
+    for i in range(34):
+        border.draw_border()
+        border.y += 10
+    for i in range(34):
+        border.draw_border()
+        border.x -= 10
+    for i in range(34):
+        border.draw_border()
+        border.y -= 10
+    if not you_lose:
+        fruit.draw_fruit()
+    draw_score()
+    pygame.display.update()
+    win.fill((0, 0, 0))
+
+
+while run:
+    pygame.time.delay(50)
+    keys = pygame.key.get_pressed()
+    snake.append_square()
+
+    if keys[pygame.K_DOWN] and not snake.facing_up:
+        snake.facing_down = True
+        snake.facing_right = False
+        snake.facing_left = False
+        snake.facing_up = False
+        has_moved_down = True
+    if keys[pygame.K_UP] and not snake.facing_down:
+        snake.facing_up = True
+        snake.facing_right = False
+        snake.facing_down = False
+        snake.facing_left = False
+        has_moved_up = True
+    if keys[pygame.K_LEFT] and not snake.facing_right:
+        snake.facing_up = False
+        snake.facing_right = False
+        snake.facing_down = False
+        snake.facing_left = True
+        has_moved_left = True
+    if keys[pygame.K_RIGHT] and not snake.facing_left:
+        snake.facing_up = False
+        snake.facing_right = True
+        snake.facing_down = False
+        snake.facing_left = False
+    if keys[pygame.K_r]:
+        you_lose = False
+        score = 0
+        snake = Snake(40, 40, 10, 10)
+        fruit = Fruit(random.randint(20, 330), random.randint(20, 330), 3)
+        line_x_right.clear()
+        line_x_left.clear()
+        line_y_up.clear()
+        line_y_down.clear()
+        draw_window()
+
+    if snake.facing_down and snake.y + snake.height < screen_height - border_height:
+        snake.y += snake.vel
+    if snake.facing_up and snake.y > border_height:
+        snake.y -= snake.vel
+    if snake.facing_left and snake.x > border_width:
+        snake.x -= snake.vel
+    if snake.facing_right and snake.x + snake.width < screen_width - border_width:
+        snake.x += snake.vel
+
+    if snake.y <= border_height:
+        you_lose = True
+    if snake.y + snake.height >= screen_height - border_height:
+        you_lose = True
+    if snake.x <= border_width:
+        you_lose = True
+    if snake.x + snake.width >= screen_width - border_width:
+        you_lose = True
+
+    if you_lose:
+        you_lost()
+
+    if snake.x < fruit.x + fruit.radius and snake.x + snake.width > fruit.x and snake.y < fruit.y + fruit.radius\
+            and snake.y + snake.height > fruit.y:
+        score += 1
+        fruit = Fruit(random.randint(20, 330), random.randint(20, 330), 3)
+        snake.vel += 0.05
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    line_x_right.append(Line(snake.x + 2.5, snake.y + 2.5, 5, 5))
+    line_x_left.append(Line(snake.x + 2.5, snake.y + 2.5, 5, 5))
+    line_y_up.append(Line(snake.x + 2.5, snake.y + 2.5, 5, 5))
+    line_y_down.append(Line(snake.x + 2.5, snake.y + 2.5, 5, 5))
+
+    if len(line_x_right) > score + 3:
+        right_1 = line_x_right[0]
+        right_2 = line_x_right[1]
+        line_x_right.remove(right_1)
+        line_x_right.remove(right_2)
+    if len(line_x_left) > score + 3:
+        left_1 = line_x_left[0]
+        left_2 = line_x_left[1]
+        line_x_left.remove(left_1)
+        line_x_left.remove(left_2)
+    if len(line_y_down) > score + 3:
+        down_1 = line_y_down[0]
+        down_2 = line_y_down[1]
+        line_y_down.remove(down_1)
+        line_y_down.remove(down_2)
+    if len(line_y_up) > score + 3:
+        up_1 = line_y_up[0]
+        up_2 = line_y_up[1]
+        line_y_up.remove(up_1)
+        line_y_up.remove(up_2)
+
+    draw_window()
+
+pygame.quit()
